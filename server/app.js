@@ -7,7 +7,8 @@ const express=require("express")
 const multer=require("multer")
 const app=express();
 const port=8080
-
+const path=require("path")
+const { db, genid } = require("./db/DbUtils")
 
 
 //开放跨域请求
@@ -27,10 +28,40 @@ app.use(express.json())//中间键
 const update = multer({
     dest:"./public/upload/temp"
 })
-app.use(update.any())
+app.use(update.any())// 使用Multer中间件处理所有的文件上传请求 这将匹配所有路由，并接收任何类型的文件上传
+//指定静态资源路径
+app.use(express.static(path.join(__dirname,"public")))
+
+//category/_token/add
+const ADMIN_TOKEN_PATH = "/_token"
+app.all("*", async (req, res, next) => {
+    if (req.path.indexOf(ADMIN_TOKEN_PATH) > -1) {//找到了
+
+        let { token } = req.headers;
+
+        let admin_token_sql = "SELECT * FROM `admin` WHERE `token` = ?"
+        let adminResult = await db.async.all(admin_token_sql,[token])
+        if(adminResult.err != null || adminResult.rows.length == 0){
+            res.send({
+                code: 403,
+                msg: "请先登录"
+            })
+            return 
+        }else{
+            next()
+        }
+    }else{
+        next()
+    }
+})
+
 
 app.use("/test",require("./routers/TestRouter"))// 加载TestRouter模块，用于处理/test相关的路由请求
 app.use("/admin",require("./routers/AdminRouter"))
+app.use("/warehouse",require("./routers/WarehouseRouter"))
+//app.use("/input",require("./routers/InputRouter"))
+//app.use("/output",require("./routers/OutputRouter"))
+//app.use("/updaterecords",require("./routers/UpdateRecordsRouter"))
 
 app.get("/",(req,res)=>{
     res.send("helloworld")
