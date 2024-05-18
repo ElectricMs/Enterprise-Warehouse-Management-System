@@ -168,5 +168,57 @@ router.post("/_token/add", async (req, res) => {//  /_token/add
 
 })
 
+// 列表接口
+router.get("/_token/list", async (req, res) => {
+    const search_sql = "SELECT `name`,`weight`,`gramPerYuan`,`number`,`numberPerYuan`,`create_time`,`update_time`,`id` FROM `warehouse` ORDER BY `update_time` DESC"
+
+    let { err, rows } = await db.async.all(search_sql, [])
+
+    if (err == null) {
+        res.send({
+            code: 200,
+            msg: "查询成功",
+            rows //rows:rows
+        })
+    } else {
+        res.send({
+            code: 500,
+            msg: "查询失败"
+        })
+    }
+
+})
+
+//修改
+router.put("/_token/input", async (req, res) => {
+    try {
+        let { id, name, weight, gramPerYuan, number, numberPerYuan, addWeight, addNumber } = req.body;
+        let updateTime = new Date().getTime();
+
+        // 执行更新操作
+        const update_sql = "UPDATE `warehouse` SET `weight` = ?, `number` = ?, `update_time` = ? WHERE `id` = ?";
+        let params1 = [weight + addWeight, number + addNumber, updateTime, id];
+        await db.async.run(update_sql, params1);
+
+        // 执行插入操作
+        let inputTime = new Date().getTime();
+        const insert_sql = "INSERT INTO `input` (`time`, `name`, `weight`, `gramPerYuan`, `number`, `numberPerYuan`, `id`) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        let params2 = [inputTime, name, addWeight, gramPerYuan, addNumber, numberPerYuan, id];
+        await db.async.run(insert_sql, params2);
+
+        // 如果两个操作都成功，则发送成功的响应
+        res.send({
+            code: 200,
+            msg: "入库数据更新成功且入库数插入表成功"
+        });
+    } catch (error) {
+        // 如果任一操作失败，捕获错误并发送失败的响应
+        console.error(error);
+        res.status(500).send({
+            code: 500,
+            msg: "入库数据处理过程中发生错误"
+        });
+    }
+});
 
 module.exports = router

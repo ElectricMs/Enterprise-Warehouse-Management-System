@@ -32,7 +32,7 @@ app.use(update.any())// 使用Multer中间件处理所有的文件上传请求 �
 //指定静态资源路径
 app.use(express.static(path.join(__dirname,"public")))
 
-//category/_token/add
+//warehouse/_token/add
 const ADMIN_TOKEN_PATH = "/_token"
 app.all("*", async (req, res, next) => {
     if (req.path.indexOf(ADMIN_TOKEN_PATH) > -1) {//找到了
