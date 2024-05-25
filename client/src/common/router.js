@@ -8,6 +8,7 @@ let routes = [
     { path: "/dashboard", component: () => import("../views/dashboard/Dashboard.vue"),children:[
         {path: "/dashboard/warehouse", component: () =>import("../views/dashboard/Warehouse.vue")},
         {path: "/dashboard/inandout", component: () =>import("../views/dashboard/InAndOut.vue")},
+        {path: "/dashboard/record", component: () =>import("../views/dashboard/Record.vue")},
     ] },
     { path: "/", component: () => import("../views/Login.vue") },
 ]

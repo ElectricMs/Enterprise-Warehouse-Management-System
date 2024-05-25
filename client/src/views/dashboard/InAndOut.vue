@@ -1,7 +1,7 @@
 <template>
     <div class="title" >出入库</div>
     <n-tabs v-model:value="tabValue" justify-content="start" type="line">
-        <n-tab-pane name="list" tab="入库记录">
+        <n-tab-pane name="InputTable" tab="入库记录">
             <n-table :bordered="false" :single-line="false">
             <thead>
                 <tr>
@@ -10,36 +10,93 @@
                     <th>元/克</th>
                     <th>数量</th>
                     <th>元/个</th>
-                    <th>创建日期</th>
-                    <th>更新日期</th>
+                    <th>入库日期</th>
                     <th>操作</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(warehouse, index) in warehouseList">
-                    <td>{{ warehouse.name }}</td>
-                    <td>{{ warehouse.weight }}</td>
-                    <td>{{ warehouse.gramPerYuan }}</td>
-                    <td>{{ warehouse.number }}</td>
-                    <td>{{ warehouse.numberPerYuan }}</td>
-                    <td>{{ warehouse.create_time }}</td>
-                    <td>{{ warehouse.update_time }}</td>
+                <tr v-for="(input, index) in inputList">
+                    <td>{{ input.name }}</td>
+                    <td>{{ input.weight }}</td>
+                    <td>{{ input.gramPerYuan }}</td>
+                    <td>{{ input.number }}</td>
+                    <td>{{ input.numberPerYuan }}</td>
+                    <td>{{ input.displayTime }}</td>
                     <td>
                         <n-space>
-                            <n-button @click="deleteWarehouse(warehouse)">删除</n-button>
+                            <n-button @click="deleteInput(input)">删除</n-button>
                         </n-space>
                     </td>
                 </tr>
-  
             </tbody>
         </n-table>
 
         </n-tab-pane>
-        <n-tab-pane name="add" tab="出库记录">
-
-            
+        <n-tab-pane name="OutputTable" tab="出库记录">
+            <n-table :bordered="false" :single-line="false">
+                <thead>
+                    <tr>
+                        <th>名称</th>
+                        <th>重量/克</th>
+                        <th>元/克</th>
+                        <th>数量</th>
+                        <th>元/个</th>
+                        <th>出库日期</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(output, index) in outputList">
+                        <td>{{ output.name }}</td>
+                        <td>{{ output.weight }}</td>
+                        <td>{{ output.gramPerYuan }}</td>
+                        <td>{{ output.number }}</td>
+                        <td>{{ output.numberPerYuan }}</td>
+                        <td>{{ output.displayTime }}</td>
+                        <td>
+                            <n-space>
+                                <n-button @click="deleteOutput(output)">删除</n-button>
+                            </n-space>
+                        </td>
+                    </tr>
+                </tbody>
+            </n-table>
         </n-tab-pane>
-        <n-tab-pane name="update" tab="成本利润计算">
+
+        <n-tab-pane name="CreateSalesSlip" tab="生成出库销售单">
+            <n-table :bordered="false" :single-line="false">
+                <thead>
+                    <tr>
+                        <th>名称</th>
+                        <th>重量/克</th>
+                        <th>元/克</th>
+                        <th>数量</th>
+                        <th>元/个</th>
+                        <th>出库日期</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(sales, index) in salesList">
+                        <td>{{ sales.name }}</td>
+                        <td>{{ sales.weight }}</td>
+                        <td>{{ sales.gramPerYuan }}</td>
+                        <td>{{ sales.number }}</td>
+                        <td>{{ sales.numberPerYuan }}</td>
+                        <td>{{ sales.displayTime }}</td>
+                        <td>
+                            <n-space>
+                                <n-button @click="deleteSales(sales)">删除</n-button>
+                            </n-space>
+                        </td>
+                    </tr>
+                </tbody>
+            </n-table>
+            <n-button @click="CreateSalesSlip()"style="margin-top:10px;width: 150px; ">生成出库销售单</n-button>
+            <n-button @click="ClearData()"style="margin-top:10px;width: 150px;margin-left:30px; ">清空记录</n-button>
+        </n-tab-pane>
+
+        <n-tab-pane name="Count" tab="成本利润计算">
             
         </n-tab-pane>
     </n-tabs>
@@ -59,98 +116,59 @@ const axios = inject("axios")
 
 const adminStore = AdminStore()
 
-const showAddModel = ref(false)
-const showUpdateModel = ref(false)
 
-const warehouseList = ref([])
-const addWarehouse = reactive({
-  name: "",
-  weight:null,
-  gramPerYuan:null,
-  number:null,
-  numberPerYuan:null,
-  //其他的后端自动
-})
-
-const updateWarehouse = reactive({
-  name: "",
-  weight:null,
-  gramPerYuan:null,
-  number:null,
-  numberPerYuan:null,
-  id:null
-  //update_time:0  后端会自动更新
-})
+const inputList = ref([])
+const outputList = ref([])
+const salesList = ref([])
 
 onMounted(() => {
   loadDatas()
 })
 
-const loadDatas = async () => {//加载和刷新数据
-  let res = await axios.get("/warehouse/_token/list")
-  warehouseList.value = res.data.rows
-  console.log("list method, print warehouseList.value")
-  console.log(warehouseList.value)
-  for (let row of warehouseList.value) {
-      // 把时间戳转换为年月日
-      //这里直接改了create_time update_time
-      let d1 = new Date(row.create_time)
-      row.create_time = `${d1.getFullYear()}年${d1.getMonth() + 1}月${d1.getDate()}日${d1.getHours()}:${d1.getMinutes()}:${d1.getSeconds()}`
-      let d2 = new Date(row.update_time)
-      row.update_time = `${d2.getFullYear()}年${d2.getMonth() + 1}月${d2.getDate()}日${d2.getHours()}:${d2.getMinutes()}:${d2.getSeconds()}`
-  }
+const loadDatas = async () => {
+    let res = await axios.get("/input/_token/list")
+    inputList.value = res.data.rows.map(row => ({
+        ...row, // 复制原始对象的所有属性
+        displayTime: formatTime(row.time) // 添加新属性displayTime，存储格式化后的时间
+    }));
+
+    let res2 = await axios.get("/output/_token/list")
+    outputList.value = res2.data.rows.map(row => ({
+        ...row, // 复制原始对象的所有属性
+        displayTime: formatTime(row.time) // 添加新属性displayTime，存储格式化后的时间
+    }));
+
+    let res3 = await axios.get("/sales/_token/list")
+    salesList.value = res3.data.rows.map(row => ({
+        ...row, // 复制原始对象的所有属性
+        displayTime: formatTime(row.time) // 添加新属性displayTime，存储格式化后的时间
+    }));
 }
 
-const add = async () => {//token已经通过拦截器传入
-  let res = await axios.post("/warehouse/_token/add", { name: addWarehouse.name })//调用对应接口
-  if (res.data.code == 200) {
-      loadDatas()
-      message.info(res.data.msg)
-  } else {
-      message.error(res.data.msg)
-  }
-  //不管成功失败都关掉窗口
-  showAddModel.value = false;
+// 新增一个函数用于格式化时间
+const formatTime = (timestamp) => {
+    let date = new Date(timestamp);
+    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 }
 
-const toUpdate = async (warehouse) =>{//这些数据要传给服务端
-  showUpdateModel.value = true 
-  updateWarehouse.name = warehouse.name
-  updateWarehouse.weight = warehouse.weight
-  updateWarehouse.gramPerYuan = warehouse.gramPerYuan
-  updateWarehouse.number = warehouse.number
-  updateWarehouse.numberPerYuan = warehouse.numberPerYuan
-  updateWarehouse.id=warehouse.id
-}
-
-//更新
-const update = async ()=>{
-  let res = await axios.put("/warehouse/_token/update", { id:updateWarehouse.id, name: updateWarehouse.name, weight: updateWarehouse.weight,
-      gramPerYuan: updateWarehouse.gramPerYuan, number: updateWarehouse.number, numberPerYuan: updateWarehouse.numberPerYuan})//服务端的更新操作
-  console.log("print updateWarehouse")
-  console.log(updateWarehouse)
-  if (res.data.code == 200) {
-      loadDatas()
-      message.info(res.data.msg)
-  } else {
-      message.error(res.data.msg)
-  }
-  showUpdateModel.value = false;
-  //loadDatas()
-}
 
 //删除
-const deleteWarehouse = async (warehouse) => {
-  const warehouseName = warehouse.name; // 获取warehouse的name属性并存储到变量中
-  console.log("print warehouse")
-  console.log(warehouse)
+const deleteInput = async (input) => {
+  const inputName = input.name; // 获取warehouse的name属性并存储到变量中
+  console.log("print input")
+  console.log(input)
   dialog.warning({
       title: '警告',
-      content: `你确定要删除“${warehouseName}”吗?此操作不会计入出库`, // 使用模板字面量插入变量值
+      content: `你确定要删除“${inputName}”的这条入库记录吗?此操作无法撤回！`, // 使用模板字面量插入变量值
       positiveText: '确定',
       negativeText: '取消',
       onPositiveClick: async () => {
-          let res = await axios.delete(`/warehouse/_token/delete?id=${warehouse.id}`)//模板写法
+        let res = await axios.delete(`/input/_token/delete`, {
+            params: {
+                id: input.id,
+                time: input.time // 确保这里替换为你要传递的具体时间值
+            }
+        });//模板写法
           if (res.data.code == 200) {
               loadDatas()
               message.info(res.data.msg)
@@ -160,9 +178,61 @@ const deleteWarehouse = async (warehouse) => {
       },
       onNegativeClick: () => { }
   })
-
 }
 
+const deleteOutput = async (output) => {
+  const outputName = output.name; // 获取warehouse的name属性并存储到变量中
+  console.log("print output")
+  console.log(output)
+  dialog.warning({
+      title: '警告',
+      content: `你确定要删除“${outputName}”的这条出库记录吗?此操作无法撤回！`, // 使用模板字面量插入变量值
+      positiveText: '确定',
+      negativeText: '取消',
+      onPositiveClick: async () => {
+        let res = await axios.delete(`/output/_token/delete`, {
+            params: {
+                id: output.id,
+                time: output.time 
+            }
+        });//模板写法
+          if (res.data.code == 200) {
+              loadDatas()
+              message.info(res.data.msg)
+          } else {
+              message.error(res.data.msg)
+          }
+      },
+      onNegativeClick: () => { }
+  })
+}
+
+const deleteSales = async (sales) => {
+  const salesName = sales.name; // 获取warehouse的name属性并存储到变量中
+  console.log("print sales")
+  console.log(sales)
+  dialog.warning({
+      title: '警告',
+      content: `你确定要删除“${salesName}”的这条出库销售记录吗?此操作无法撤回！`, // 使用模板字面量插入变量值
+      positiveText: '确定',
+      negativeText: '取消',
+      onPositiveClick: async () => {
+        let res = await axios.delete(`/sales/_token/delete`, {
+            params: {
+                id: sales.id,
+                time: sales.time 
+            }
+        });//模板写法
+          if (res.data.code == 200) {
+              loadDatas()
+              message.info(res.data.msg)
+          } else {
+              message.error(res.data.msg)
+          }
+      },
+      onNegativeClick: () => { }
+  })
+}
 </script>
 
 <style lang="scss" scoped>

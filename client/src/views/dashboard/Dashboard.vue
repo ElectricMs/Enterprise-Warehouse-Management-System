@@ -30,7 +30,7 @@
 let menus = [
     { name: "仓库管理", href: "/dashboard/warehouse" },
     { name: "出入库", href: "/dashboard/inandout" },
-    //{ name: "记录", href: "/dashboard/category" },
+    { name: "操作记录", href: "/dashboard/record" },
     { name: "退出", href: "logout" },
 ];
 

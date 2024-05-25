@@ -59,8 +59,10 @@ app.all("*", async (req, res, next) => {
 app.use("/test",require("./routers/TestRouter"))// 加载TestRouter模块，用于处理/test相关的路由请求
 app.use("/admin",require("./routers/AdminRouter"))
 app.use("/warehouse",require("./routers/WarehouseRouter"))
-//app.use("/input",require("./routers/InputRouter"))
-//app.use("/output",require("./routers/OutputRouter"))
+app.use("/input",require("./routers/InputRouter"))
+app.use("/output",require("./routers/OutputRouter"))
+app.use("/sales",require("./routers/SalesRouter"))
+//app.use("/record",require("./routersRecordRouter"))
 //app.use("/updaterecords",require("./routers/UpdateRecordsRouter"))
 
 app.get("/",(req,res)=>{

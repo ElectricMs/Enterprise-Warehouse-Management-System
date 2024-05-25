@@ -25,13 +25,9 @@
                     <td>{{ warehouse.create_time }}</td>
                     <td>{{ warehouse.update_time }}</td>
                     <td>
-                        <n-space>
-                            
+                        <n-space>                            
                             <n-button @click="toInput(warehouse)">入库-记录入库</n-button>
-                            <n-button @click="output(warehouse)">出库-记录出库</n-button>
-                            
-                            
-                            
+                            <n-button @click="toOutput(warehouse)">出库-记录出库</n-button>                                                                           
                             <n-button @click="toUpdate(warehouse)">修改</n-button>
                             <n-button @click="deleteWarehouse(warehouse)">删除</n-button>
                         </n-space>
@@ -99,20 +95,35 @@
             <template #header>
                 <div>入库-记录入库</div>
             </template>
-            <div>入库商品:${warehouse.name}</div>
-            <div>已有重量:${warehouse.name}</div>
-            <div>元/克:${warehouse.name}</div>
-            <div>已有个数:${warehouse.name}</div>
-            <div>元/个:${warehouse.name}</div>
-            <div>
-                <n-input-number v-model:value="inputWarehouse.addWeight"  placeholder="新增 克":min="0" />
-            </div>
-            <div>
-                <n-input-number v-model:value="inputWarehouse.addNumber"  placeholder="新增 个":min="0" />
-            </div>
+            <div v-if="thewarehouse">入库商品:{{ thewarehouse.name }}</div>
+            <div v-if="thewarehouse">已有重量:{{ thewarehouse.weight }} 克</div>
+            <div v-if="thewarehouse">元/克:{{ thewarehouse.gramPerYuan }}</div>
+            <div v-if="thewarehouse">已有个数:{{ thewarehouse.number }}</div>
+            <div v-if="thewarehouse">元/个:{{ thewarehouse.numberPerYuan }}</div>
+            <div><n-input-number v-model:value="inputWarehouse.addWeight"  placeholder="新增 克":min="0" /></div>
+            <div><n-input-number v-model:value="inputWarehouse.addNumber"  placeholder="新增 个":min="0" /></div>
             <template #action>
                 <div>
                     <n-button @click="input">入库</n-button>
+                </div>
+            </template>
+        </n-modal>
+
+        <!--output的模态框-->
+        <n-modal v-model:show="showOutputModel" preset="dialog" title="Dialog">
+            <template #header>
+                <div>出库-记录出库</div>
+            </template>
+            <div v-if="thewarehouse">出库商品:{{ thewarehouse.name }}</div>
+            <div v-if="thewarehouse">已有重量:{{ thewarehouse.weight }} 克</div>
+            <div v-if="thewarehouse">元/克:{{ thewarehouse.gramPerYuan }}</div>
+            <div v-if="thewarehouse">已有个数:{{ thewarehouse.number }}</div>
+            <div v-if="thewarehouse">元/个:{{ thewarehouse.numberPerYuan }}</div>
+            <div><n-input-number v-model:value="outputWarehouse.reduceWeight"  placeholder="出库 克":max="thewarehouse ? thewarehouse.weight : 0" /></div>
+            <div><n-input-number v-model:value="outputWarehouse.reduceNumber"  placeholder="出库 个":max="thewarehouse ? thewarehouse.number : 0" /></div>
+            <template #action>
+                <div>
+                    <n-button @click="output">出库</n-button>
                 </div>
             </template>
         </n-modal>
@@ -136,7 +147,8 @@
   const showAddModel = ref(false)
   const showUpdateModel = ref(false)
   const showInputModel = ref(false)
-  
+  const showOutputModel = ref(false)
+  let thewarehouse= ref([])
   const warehouseList = ref([])
   const addWarehouse = reactive({
     name: "",
@@ -166,6 +178,17 @@
     id:null,
     addWeight:null,
     addNumber:null
+  })
+
+  const outputWarehouse = reactive({
+    name: "",
+    weight:null,
+    gramPerYuan:null,
+    number:null,
+    numberPerYuan:null,
+    id:null,
+    reduceWeight:null,
+    reduceNumber:null
   })
 
   onMounted(() => {
@@ -219,6 +242,18 @@
     inputWarehouse.number = warehouse.number
     inputWarehouse.numberPerYuan = warehouse.numberPerYuan
     inputWarehouse.id=warehouse.id
+    thewarehouse = warehouse
+  }
+
+  const toOutput = async (warehouse) =>{
+    showOutputModel.value = true 
+    outputWarehouse.name = warehouse.name
+    outputWarehouse.weight = warehouse.weight
+    outputWarehouse.gramPerYuan = warehouse.gramPerYuan
+    outputWarehouse.number = warehouse.number
+    outputWarehouse.numberPerYuan = warehouse.numberPerYuan
+    outputWarehouse.id=warehouse.id
+    thewarehouse = warehouse
   }
   
   //更新
@@ -262,7 +297,7 @@
 
   //input
   const input = async ()=>{
-    let res = await axios.put("/warehouse/_token/input", {  id: inputWarehouse.id, name: inputWarehouse.weight, 
+    let res = await axios.put("/warehouse/_token/input", {  id: inputWarehouse.id, name: inputWarehouse.name, 
         weight: inputWarehouse.weight, gramPerYuan: inputWarehouse.gramPerYuan,number: inputWarehouse.number,
         numberPerYuan: inputWarehouse.numberPerYuan, addWeight:inputWarehouse.addWeight, addNumber:inputWarehouse.addNumber})//服务端的更新操作
     console.log("print inputWarehouse")
@@ -273,7 +308,23 @@
     } else {
         message.error(res.data.msg)
     }
-    showUpdateModel.value = false;
+    showInputModel.value = false;
+  }
+
+  //output
+  const output = async ()=>{
+    let res = await axios.put("/warehouse/_token/output", {  id: outputWarehouse.id, name: outputWarehouse.name, 
+        weight: outputWarehouse.weight, gramPerYuan: outputWarehouse.gramPerYuan,number: outputWarehouse.number,
+        numberPerYuan: outputWarehouse.numberPerYuan, reduceWeight:outputWarehouse.reduceWeight, reduceNumber:outputWarehouse.reduceNumber})//服务端的更新操作
+    console.log("print outputWarehouse")
+    console.log(outputWarehouse)
+    if (res.data.code == 200) {
+        loadDatas()
+        message.info(res.data.msg)
+    } else {
+        message.error(res.data.msg)
+    }
+    showOutputModel.value = false;
   }
   
   </script>
@@ -288,6 +339,6 @@
           //position: fixed;
           color: rgba(0, 0, 0, 40%);
           
-      }
+    }
   
   </style>

@@ -189,7 +189,7 @@ router.get("/_token/list", async (req, res) => {
 
 })
 
-//修改
+//修改-入库
 router.put("/_token/input", async (req, res) => {
     try {
         let { id, name, weight, gramPerYuan, number, numberPerYuan, addWeight, addNumber } = req.body;
@@ -216,7 +216,44 @@ router.put("/_token/input", async (req, res) => {
         console.error(error);
         res.status(500).send({
             code: 500,
-            msg: "入库数据处理过程中发生错误"
+            msg: "入库数据处理过程中发生错误，请报告管理员"
+        });
+    }
+});
+
+//修改-出库
+router.put("/_token/output", async (req, res) => {
+    try {
+        let { id, name, weight, gramPerYuan, number, numberPerYuan, reduceWeight, reduceNumber } = req.body;
+        let updateTime = new Date().getTime();
+
+        // 执行更新操作
+        const update_sql = "UPDATE `warehouse` SET `weight` = ?, `number` = ?, `update_time` = ? WHERE `id` = ?";
+        let params1 = [weight - reduceWeight, number - reduceNumber, updateTime, id];
+        await db.async.run(update_sql, params1);
+
+        // 执行插入出库表操作
+        let outputTime = new Date().getTime();
+        const insert_sql = "INSERT INTO `output` (`time`, `name`, `weight`, `gramPerYuan`, `number`, `numberPerYuan`, `id`) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        let params2 = [outputTime, name, reduceWeight, gramPerYuan, reduceNumber, numberPerYuan, id];
+        await db.async.run(insert_sql, params2);
+
+        //执行插入销售单操作
+        const insert_sql2 = "INSERT INTO `salesSlip` (`time`, `name`, `weight`, `gramPerYuan`, `number`, `numberPerYuan`, `id`) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        let params3 = [outputTime, name, reduceWeight, gramPerYuan, reduceNumber, numberPerYuan, id];
+        await db.async.run(insert_sql2, params3);
+
+        // 如果三个操作都成功，则发送成功的响应
+        res.send({
+            code: 200,
+            msg: "出库成功"
+        });
+    } catch (error) {
+        // 如果任一操作失败，捕获错误并发送失败的响应
+        console.error(error);
+        res.status(500).send({
+            code: 500,
+            msg: "出库数据处理过程中发生错误，请报告管理员"
         });
     }
 });

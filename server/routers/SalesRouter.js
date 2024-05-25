@@ -79,7 +79,7 @@ router.get("/search", async (req, res) => {
 router.delete("/_token/delete", async (req, res) => {//  /_token/delete
     let id = req.query.id
     let time=req.query.time
-    const delete_sql = "DELETE FROM `output` WHERE `id` = ? and time=?"
+    const delete_sql = "DELETE FROM `salesSlip` WHERE `id` = ? and time=?"
     let { err, rows } = await db.async.run(delete_sql, [id,time])
 
     if (err == null) {
@@ -99,7 +99,7 @@ router.delete("/_token/delete", async (req, res) => {//  /_token/delete
 
 // 列表接口
 router.get("/_token/list", async (req, res) => {
-    const search_sql = "SELECT `name`,`weight`,`gramPerYuan`,`number`,`numberPerYuan`,`time`,`id` FROM `output` ORDER BY `time` DESC"
+    const search_sql = "SELECT `name`,`weight`,`gramPerYuan`,`number`,`numberPerYuan`,`time`,`id` FROM `salesSlip` ORDER BY `time` DESC"
 
     let { err, rows } = await db.async.all(search_sql, [])
 
