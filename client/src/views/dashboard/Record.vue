@@ -21,18 +21,18 @@
             </thead>
             <tbody>
                 <tr v-for="(operation, index) in operationList">
-                    <td>{{ operation.prename }}</td>
+                    <td>{{ operation.name_old }}</td>
                     <td>{{ operation.name }}</td>
-                    <td>{{ operation.preweight }}</td>
-                    <td>{{ operation.weight }}</td>
-                    <td>{{ operation.pregramPerYuan }}</td>
-                    <td>{{ operation.gramPerYuan }}</td>
-                    <td>{{ operation.prenumber }}</td>
-                    <td>{{ operation.number }}</td>
-                    <td>{{ operation.prenumberPerYuan }}</td>
-                    <td>{{ operation.numberPerYuan }}</td>
-                    <td>{{ operation.operateName }}</td>
-                    <td>{{ warehouse.time }}</td>
+                    <td>{{ operation.weight_old }}</td>
+                    <td>{{ operation.weight_new }}</td>
+                    <td>{{ operation.gramPerYuan_old }}</td>
+                    <td>{{ operation.gramPerYuan_new }}</td>
+                    <td>{{ operation.number_old }}</td>
+                    <td>{{ operation.number_new }}</td>
+                    <td>{{ operation.numberPerYuan_old }}</td>
+                    <td>{{ operation.numberPerYuan_new }}</td>
+                    <td>{{ operation.method }}</td>
+                    <td>{{ operation.update_time }}</td>
                 </tr>
             </tbody>
         </n-table>
@@ -61,14 +61,12 @@
     const loadDatas = async () => {//加载和刷新数据
         let res = await axios.get("/record/_token/list")
         operationList.value = res.data.rows
-        console.log("list method, print res")
-        console.log(res)
         console.log("list method, print operationList.value")
         console.log(operationList.value)
         for (let row of operationList.value) {
             // 把时间戳转换为年月日
-            let d1 = new Date(row.time)
-            row.time = `${d1.getFullYear()}年${d1.getMonth() + 1}月${d1.getDate()}日${d1.getHours()}:${d1.getMinutes()}:${d1.getSeconds()}`
+            let d1 = new Date(row.update_time)
+            row.update_time = `${d1.getFullYear()}年${d1.getMonth() + 1}月${d1.getDate()}日${d1.getHours()}:${d1.getMinutes()}:${d1.getSeconds()}`
         }
     }
 
@@ -76,13 +74,12 @@
 
 <style lang="scss" scoped>
     .title{
-          font-size: 60px;
-          font-weight: bold;
-          text-align: left;
-          margin-bottom:20px;
-          margin-left:30px;
-          //position: fixed;
-          color: rgba(0, 0, 0, 40%);
-          
+        font-size: 60px;
+        font-weight: bold;
+        text-align: left;
+        margin-bottom:20px;
+        margin-left:30px;
+        //position: fixed;
+        color: rgba(0, 0, 0, 40%);  
     }
 </style>

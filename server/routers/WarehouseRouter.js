@@ -3,7 +3,7 @@ const router = express.Router()
 const { db, genid } = require("../db/DbUtils")
 
 
-router.get("/detail", async (req, res) => {//特定链接点进去用的 不一定有用
+router.get("/detail", async (req, res) => {//特定链接点进去用的 不一定有用-----------------------------
 
     let { id } = req.query
     let detail_sql = "SELECT * FROM `warehouse` WHERE `id` = ? "
@@ -24,7 +24,7 @@ router.get("/detail", async (req, res) => {//特定链接点进去用的 不一�
 
 })
 
-//查询 包含模糊查询
+//查询 包含模糊查询-------------------------------------------
 router.get("/search", async (req, res) => {
 
 
@@ -97,41 +97,57 @@ router.get("/search", async (req, res) => {
 
 // 删除接口 /warehouse/delete?id=xxx
 router.delete("/_token/delete", async (req, res) => {//  /_token/delete
-    let id = req.query.id
-    const delete_sql = "DELETE FROM `warehouse` WHERE `id` = ?"
-    let { err, rows } = await db.async.run(delete_sql, [id])
+    
 
-    if (err == null) {
+    try{
+        let id = req.query.id
+        const delete_sql = "DELETE FROM `warehouse` WHERE `id` = ?"
+        await db.async.run(delete_sql, [id])
+
+        // 执行记录操作
+        let operationMethod="删除"
+        const insert_sql2 = "INSERT INTO `updateRecords` (`id`,`method`) VALUES (?, ?)";
+        let params3 = [ id, operationMethod];
+        await db.async.run(insert_sql2, params3);
+
         res.send({
             code: 200,
             msg: "删除成功"
         })
-    } else {
+    }catch(error){
+        console.log(error)
         res.send({
             code: 500,
             msg: "删除失败"
         })
     }
 
+
+
 })
 
 //修改
 router.put("/_token/update", async (req, res) => {//  /_token/update
 
-    let { id,name,weight,gramPerYuan,number,numberPerYuan } = req.body;
-    let update_time = new Date().getTime();
+    try{
+        let { id,name,weight,gramPerYuan,number,numberPerYuan } = req.body;
+        let update_time = new Date().getTime();
+        const update_sql = "UPDATE `warehouse` SET `name` = ?,`weight` = ?,`gramPerYuan` = ?,`number` = ?,`numberPerYuan` = ?,`update_time`=? WHERE `id` = ?"
+        let params = [name, weight, gramPerYuan, number, numberPerYuan,update_time,id]
+        await db.async.run(update_sql, params)
 
-    const update_sql = "UPDATE `warehouse` SET `name` = ?,`weight` = ?,`gramPerYuan` = ?,`number` = ?,`numberPerYuan` = ?,`update_time`=? WHERE `id` = ?"
-    let params = [name, weight, gramPerYuan, number, numberPerYuan,update_time,id]
+        // 执行记录操作
+        let operationMethod="修改"
+        const insert_sql2 = "INSERT INTO `updateRecords` (`name_old`,`name`,`weight_old`,`weight_new`,`gramPerYuan_old`,`gramPerYuan_new`,`number_old`,`number_new`,`numberPerYuan_old`,`numberPerYuan_new`,`update_time`,`id`,`method`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        let params3 = [ null, name, null, weight, null, gramPerYuan, null, number, null, numberPerYuan, update_time, id, operationMethod];
+        await db.async.run(insert_sql2, params3);
 
-    let { err, rows } = await db.async.run(update_sql, params)
-
-    if (err == null) {
         res.send({
             code: 200,
             msg: "修改成功"
         })
-    } else {
+    }catch(error){
+        console.log(error)
         res.send({
             code: 500,
             msg: "修改失败"
@@ -143,29 +159,34 @@ router.put("/_token/update", async (req, res) => {//  /_token/update
 //添加
 router.post("/_token/add", async (req, res) => {//  /_token/add
 
-    
-    let { name,weight,gramPerYuan,number,numberPerYuan } = req.body;
-    let id = genid.NextId();
-    let create_time = new Date().getTime();
-    let update_time = new Date().getTime();
+    try{
+        let { name,weight,gramPerYuan,number,numberPerYuan } = req.body;
+        let id = genid.NextId();
+        let create_time = new Date().getTime();
+        let update_time = new Date().getTime();
 
-    const insert_sql = "INSERT INTO `warehouse` (`id`,`name`,`weight`,`gramPerYuan`,`number`,`numberPerYuan`,`create_time`,`update_time`) VALUES (?,?,?,?,?,?,?,?)"
-    let params = [id, name, weight, gramPerYuan, number, numberPerYuan, create_time, update_time]
+        const insert_sql = "INSERT INTO `warehouse` (`id`,`name`,`weight`,`gramPerYuan`,`number`,`numberPerYuan`,`create_time`,`update_time`) VALUES (?,?,?,?,?,?,?,?)"
+        let params = [id, name, weight, gramPerYuan, number, numberPerYuan, create_time, update_time]
+        await db.async.run(insert_sql, params)//异步执行SQL插入操作
 
-    let { err, rows } = await db.async.run(insert_sql, params)//异步执行SQL插入操作
+        // 执行记录操作
+        let operationMethod="添加"
+        const insert_sql2 = "INSERT INTO `updateRecords` (`name_old`,`name`,`weight_old`,`weight_new`,`gramPerYuan_old`,`gramPerYuan_new`,`number_old`,`number_new`,`numberPerYuan_old`,`numberPerYuan_new`,`update_time`,`id`,`method`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        let params3 = [ null, name, null, weight, null, gramPerYuan, null, number, null, numberPerYuan, update_time, id, operationMethod];
+        await db.async.run(insert_sql2, params3);
 
-    if (err == null) {
         res.send({
             code: 200,
             msg: "添加成功"
         })
-    } else {
+    }catch(error){
+        console.log(error)
         res.send({
             code: 500,
             msg: "添加失败"
         })
     }
-
+    
 })
 
 // 列表接口
@@ -206,7 +227,13 @@ router.put("/_token/input", async (req, res) => {
         let params2 = [inputTime, name, addWeight, gramPerYuan, addNumber, numberPerYuan, id];
         await db.async.run(insert_sql, params2);
 
-        // 如果两个操作都成功，则发送成功的响应
+        // 执行记录操作
+        let operationMethod="入库"
+        const insert_sql2 = "INSERT INTO `updateRecords` (`name_old`,`name`,`weight_old`,`weight_new`,`gramPerYuan_old`,`gramPerYuan_new`,`number_old`,`number_new`,`numberPerYuan_old`,`numberPerYuan_new`,`update_time`,`id`,`method`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        let params3 = [ name, name, weight, weight+addWeight, gramPerYuan, gramPerYuan, number, number+addNumber, numberPerYuan, numberPerYuan, inputTime, id, operationMethod];
+        await db.async.run(insert_sql2, params3);
+
+        // 如果三个操作都成功，则发送成功的响应
         res.send({
             code: 200,
             msg: "入库数据更新成功且入库数插入表成功"
@@ -243,7 +270,13 @@ router.put("/_token/output", async (req, res) => {
         let params3 = [outputTime, name, reduceWeight, gramPerYuan, reduceNumber, numberPerYuan, id];
         await db.async.run(insert_sql2, params3);
 
-        // 如果三个操作都成功，则发送成功的响应
+        // 执行记录操作
+        let operationMethod="出库"
+        const insert_sql3 = "INSERT INTO `updateRecords` (`name_old`,`name`,`weight_old`,`weight_new`,`gramPerYuan_old`,`gramPerYuan_new`,`number_old`,`number_new`,`numberPerYuan_old`,`numberPerYuan_new`,`update_time`,`id`,`method`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        let params4 = [ name, name, weight, weight-reduceWeight, gramPerYuan, gramPerYuan, number, number-reduceNumber, numberPerYuan, numberPerYuan, outputTime, id, operationMethod];
+        await db.async.run(insert_sql3, params4);
+
+        // 如果四个操作都成功，则发送成功的响应
         res.send({
             code: 200,
             msg: "出库成功"

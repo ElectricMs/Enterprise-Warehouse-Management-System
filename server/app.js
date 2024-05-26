@@ -62,8 +62,8 @@ app.use("/warehouse",require("./routers/WarehouseRouter"))
 app.use("/input",require("./routers/InputRouter"))
 app.use("/output",require("./routers/OutputRouter"))
 app.use("/sales",require("./routers/SalesRouter"))
-//app.use("/record",require("./routersRecordRouter"))
-//app.use("/updaterecords",require("./routers/UpdateRecordsRouter"))
+app.use("/record",require("./routers/RecordRouter"))
+
 
 app.get("/",(req,res)=>{
     res.send("helloworld")
