@@ -42,21 +42,11 @@
             <template #header>
                 <div>新的物品-入库</div>
             </template>
-            <div>
-                <n-input v-model:value="addWarehouse.name" type="text" placeholder="请输入名称" />
-            </div>
-            <div>
-                <n-input-number v-model:value="addWarehouse.weight"  placeholder="重量 克":min="0" />
-            </div>
-            <div>
-                <n-input-number v-model:value="addWarehouse.weightPerYuan"  placeholder="价格 元/g":min="0" />
-            </div>
-            <div>
-                <n-input-number v-model:value="addWarehouse.number"  placeholder="数量 个":min="0" />
-            </div>
-            <div>
-                <n-input-number v-model:value="addWarehouse.numberPerYuan"  placeholder="价格 元/个":min="0" />
-            </div>
+            <div><n-input v-model:value="addWarehouse.name" type="text"placeholder="请输入名称" /></div>
+            <div><n-input-number v-model:value="addWarehouse.weight"  placeholder="重量 克":min="0" /></div>
+            <div><n-input-number v-model:value="addWarehouse.gramPerYuan"  placeholder="价格 元/g":min="0" /></div>
+            <div><n-input-number v-model:value="addWarehouse.number"  placeholder="数量 个":min="0" /></div>
+            <div><n-input-number v-model:value="addWarehouse.numberPerYuan"  placeholder="价格 元/个":min="0" /></div>
             <template #action>
                 <div>
                     <n-button @click="add">提交</n-button>
@@ -68,21 +58,11 @@
             <template #header>
                 <div>修改该物品-不计入出入库</div>
             </template>
-            <div>
-                <n-input v-model:value="updateWarehouse.name" type="text" placeholder="请输入名称" />
-            </div>
-            <div>
-                <n-input-number v-model:value="updateWarehouse.weight"  placeholder="重量 克":min="0"  />
-            </div>
-            <div>
-                <n-input-number v-model:value="updateWarehouse.gramPerYuan"  placeholder="价格 元/g":min="0" />
-            </div>
-            <div>
-                <n-input-number v-model:value="updateWarehouse.number"  placeholder="数量 个":min="0" />
-            </div>
-            <div>
-                <n-input-number v-model:value="updateWarehouse.numberPerYuan"  placeholder="价格 元/个":min="0" />
-            </div>
+            <div><n-input v-model:value="updateWarehouse.name" type="text" placeholder="请输入名称" /></div>
+            <div><n-input-number v-model:value="updateWarehouse.weight_new"  placeholder="重量 克":min="0"  /></div>
+            <div><n-input-number v-model:value="updateWarehouse.gramPerYuan_new"  placeholder="价格 元/g":min="0" /></div>
+            <div><n-input-number v-model:value="updateWarehouse.number_new"  placeholder="数量 个":min="0" /></div>
+            <div><n-input-number v-model:value="updateWarehouse.numberPerYuan_new"  placeholder="价格 元/个":min="0" /></div>
             <template #action>
                 <div>
                     <n-button @click="update">提交</n-button>
@@ -119,8 +99,12 @@
             <div v-if="thewarehouse">元/克:{{ thewarehouse.gramPerYuan }}</div>
             <div v-if="thewarehouse">已有个数:{{ thewarehouse.number }}</div>
             <div v-if="thewarehouse">元/个:{{ thewarehouse.numberPerYuan }}</div>
-            <div><n-input-number v-model:value="outputWarehouse.reduceWeight"  placeholder="出库 克":max="thewarehouse ? thewarehouse.weight : 0" /></div>
-            <div><n-input-number v-model:value="outputWarehouse.reduceNumber"  placeholder="出库 个":max="thewarehouse ? thewarehouse.number : 0" /></div>
+            <div>超出原有商品数量的出库请求将被拒绝！</div>
+            <div><n-input-number v-model:value="outputWarehouse.reduceWeight"  placeholder="出库 克":min="0" /></div>
+            <div><n-input-number v-model:value="outputWarehouse.reduceNumber"  placeholder="出库 个":min="0" /></div>
+            
+            
+            
             <template #action>
                 <div>
                     <n-button @click="output">出库</n-button>
@@ -160,11 +144,16 @@
   })
   
   const updateWarehouse = reactive({
+    name_old: "",
+    weight_old:null,
+    gramPerYuan_old:null,
+    number_old:null,
+    numberPerYuan_old:null,
     name: "",
-    weight:null,
-    gramPerYuan:null,
-    number:null,
-    numberPerYuan:null,
+    weight_new:null,
+    gramPerYuan_new:null,
+    number_new:null,
+    numberPerYuan_new:null,
     id:null
     //update_time:0  后端会自动更新
   })
@@ -213,7 +202,19 @@
   }
   
   const add = async () => {//token已经通过拦截器传入
-    let res = await axios.post("/warehouse/_token/add", { name: addWarehouse.name })//调用对应接口
+    if (addWarehouse.weight ==null) {
+        addWarehouse.weight=0;
+    }
+    if (addWarehouse.gramPerYuan ==null) {
+        addWarehouse.gramPerYuan=0;
+    }
+    if (addWarehouse.number ==null) {
+        addWarehouse.number=0;
+    }
+    if (addWarehouse.numberPerYuan ==null) {
+        addWarehouse.numberPerYuan=0;
+    }
+    let res = await axios.post("/warehouse/_token/add", { name: addWarehouse.name, weight: addWarehouse.weight, gramPerYuan: addWarehouse.gramPerYuan, number: addWarehouse.number, numberPerYuan:addWarehouse.numberPerYuan })//调用对应接口
     if (res.data.code == 200) {
         loadDatas()
         message.info(res.data.msg)
@@ -226,11 +227,16 @@
   
   const toUpdate = async (warehouse) =>{//这些数据要传给服务端
     showUpdateModel.value = true 
+    updateWarehouse.name_old = warehouse.name
+    updateWarehouse.weight_old = warehouse.weight
+    updateWarehouse.gramPerYuan_old = warehouse.gramPerYuan
+    updateWarehouse.number_old = warehouse.number
+    updateWarehouse.numberPerYuan_old = warehouse.numberPerYuan
     updateWarehouse.name = warehouse.name
-    updateWarehouse.weight = warehouse.weight
-    updateWarehouse.gramPerYuan = warehouse.gramPerYuan
-    updateWarehouse.number = warehouse.number
-    updateWarehouse.numberPerYuan = warehouse.numberPerYuan
+    updateWarehouse.weight_new = warehouse.weight
+    updateWarehouse.gramPerYuan_new = warehouse.gramPerYuan
+    updateWarehouse.number_new = warehouse.number
+    updateWarehouse.numberPerYuan_new = warehouse.numberPerYuan
     updateWarehouse.id=warehouse.id
   }
 
@@ -258,8 +264,10 @@
   
   //更新
   const update = async ()=>{
-    let res = await axios.put("/warehouse/_token/update", { id:updateWarehouse.id, name: updateWarehouse.name, weight: updateWarehouse.weight,
-        gramPerYuan: updateWarehouse.gramPerYuan, number: updateWarehouse.number, numberPerYuan: updateWarehouse.numberPerYuan})//服务端的更新操作
+    let res = await axios.put("/warehouse/_token/update", { id:updateWarehouse.id, name: updateWarehouse.name, weight_new: updateWarehouse.weight_new,
+        gramPerYuan_new: updateWarehouse.gramPerYuan_new, number_new: updateWarehouse.number_new, numberPerYuan_new: updateWarehouse.numberPerYuan_new,
+        name_old: updateWarehouse.name_old, weight_old: updateWarehouse.weight_old, gramPerYuan_old: updateWarehouse.gramPerYuan_old, 
+        number_old: updateWarehouse.number_old, numberPerYuan_old: updateWarehouse.numberPerYuan_old})//服务端的更新操作
     console.log("print updateWarehouse")
     console.log(updateWarehouse)
     if (res.data.code == 200) {
@@ -273,28 +281,38 @@
   
   //删除
   const deleteWarehouse = async (warehouse) => {
-    const warehouseName = warehouse.name; // 获取warehouse的name属性并存储到变量中
-    console.log("print warehouse")
-    console.log(warehouse)
+    const warehouseName = warehouse.name;
+    console.log("print warehouse");
+    console.log(warehouse);
+
     dialog.warning({
         title: '警告',
-        content: `你确定要删除“${warehouseName}”吗?此操作不会计入出库`, // 使用模板字面量插入变量值
+        content: `你确定要删除“${warehouseName}”吗?此操作不会计入出库`,
         positiveText: '确定',
         negativeText: '取消',
         onPositiveClick: async () => {
-            let res = await axios.delete(`/warehouse/_token/delete?id=${warehouse.id}`)//模板写法
+            // 请求包含所有需要参数的对象
+            let res = await axios.delete(`/warehouse/_token/delete`, {
+                data: { 
+                    id: warehouse.id, 
+                    name: warehouse.name, 
+                    weight: warehouse.weight,
+                    gramPerYuan: warehouse.gramPerYuan,
+                    number: warehouse.number,
+                    numberPerYuan: warehouse.numberPerYuan
+                } 
+            }); // 注意：并非所有后端都支持DELETE方法携带请求体，需确认API设计
+
             if (res.data.code == 200) {
-                loadDatas()
-                message.info(res.data.msg)
+                loadDatas();
+                message.info(res.data.msg);
             } else {
-                message.error(res.data.msg)
+                message.error(res.data.msg);
             }
         },
-        onNegativeClick: () => { }
-    })
-  
-  }
-
+        onNegativeClick: () => {}
+    });
+}
   //input
   const input = async ()=>{
     let res = await axios.put("/warehouse/_token/input", {  id: inputWarehouse.id, name: inputWarehouse.name, 
@@ -313,6 +331,15 @@
 
   //output
   const output = async ()=>{
+    if (outputWarehouse.reduceWeight > outputWarehouse.weight) {
+        message.error('出库重量不能大于原有重量！');
+        return; // 结束函数，不再执行后续的API调用
+    }
+    if (outputWarehouse.reduceNumber > outputWarehouse.number) {
+        message.error('出库重量不能大于原有重量！');
+        return; // 结束函数，不再执行后续的API调用
+    }
+
     let res = await axios.put("/warehouse/_token/output", {  id: outputWarehouse.id, name: outputWarehouse.name, 
         weight: outputWarehouse.weight, gramPerYuan: outputWarehouse.gramPerYuan,number: outputWarehouse.number,
         numberPerYuan: outputWarehouse.numberPerYuan, reduceWeight:outputWarehouse.reduceWeight, reduceNumber:outputWarehouse.reduceNumber})//服务端的更新操作

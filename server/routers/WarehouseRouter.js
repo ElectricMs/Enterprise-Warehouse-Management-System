@@ -100,14 +100,15 @@ router.delete("/_token/delete", async (req, res) => {//  /_token/delete
     
 
     try{
-        let id = req.query.id
+        let { id,name,weight,gramPerYuan,number,numberPerYuan } = req.body;
         const delete_sql = "DELETE FROM `warehouse` WHERE `id` = ?"
         await db.async.run(delete_sql, [id])
 
         // 执行记录操作
         let operationMethod="删除"
-        const insert_sql2 = "INSERT INTO `updateRecords` (`id`,`method`) VALUES (?, ?)";
-        let params3 = [ id, operationMethod];
+        let update_time = new Date().getTime();
+        const insert_sql2 = "INSERT INTO `updateRecords` (`id`,`name_old`,`weight_old`,`gramPerYuan_old`,`number_old`,`numberPerYuan_old`,`update_time`,`method`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        let params3 = [ id, name, weight, gramPerYuan, number, numberPerYuan, update_time, operationMethod];
         await db.async.run(insert_sql2, params3);
 
         res.send({
@@ -130,16 +131,16 @@ router.delete("/_token/delete", async (req, res) => {//  /_token/delete
 router.put("/_token/update", async (req, res) => {//  /_token/update
 
     try{
-        let { id,name,weight,gramPerYuan,number,numberPerYuan } = req.body;
+        let { id,name_old,weight_old,gramPerYuan_old,number_old,numberPerYuan_old,name,weight_new,gramPerYuan_new,number_new,numberPerYuan_new } = req.body;
         let update_time = new Date().getTime();
         const update_sql = "UPDATE `warehouse` SET `name` = ?,`weight` = ?,`gramPerYuan` = ?,`number` = ?,`numberPerYuan` = ?,`update_time`=? WHERE `id` = ?"
-        let params = [name, weight, gramPerYuan, number, numberPerYuan,update_time,id]
+        let params = [name, weight_new, gramPerYuan_new, number_new, numberPerYuan_new,update_time,id]
         await db.async.run(update_sql, params)
 
         // 执行记录操作
         let operationMethod="修改"
         const insert_sql2 = "INSERT INTO `updateRecords` (`name_old`,`name`,`weight_old`,`weight_new`,`gramPerYuan_old`,`gramPerYuan_new`,`number_old`,`number_new`,`numberPerYuan_old`,`numberPerYuan_new`,`update_time`,`id`,`method`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        let params3 = [ null, name, null, weight, null, gramPerYuan, null, number, null, numberPerYuan, update_time, id, operationMethod];
+        let params3 = [ name_old, name, weight_old, weight_new, gramPerYuan_old, gramPerYuan_new, number_old, number_new, numberPerYuan_old, numberPerYuan_new, update_time, id, operationMethod];
         await db.async.run(insert_sql2, params3);
 
         res.send({
