@@ -86,15 +86,56 @@
                         <td>{{ sales.displayTime }}</td>
                         <td>
                             <n-space>
+                                <n-button @click="addToSlip(sales)">添加到表</n-button>
                                 <n-button @click="deleteSales(sales)">删除</n-button>
                             </n-space>
                         </td>
                     </tr>
                 </tbody>
             </n-table>
-            <n-button @click="CreateSalesSlip()"style="margin-top:10px;width: 150px; ">生成出库销售单</n-button>
+            <n-button @click="CreateSalesSlip()"style="margin-top:10px;width: 150px;margin-left:30px ">生成出库销售单</n-button>
             <n-button @click="ClearData()"style="margin-top:10px;width: 150px;margin-left:30px; ">清空记录</n-button>
+
+            <n-table :bordered="false" :single-line="false">
+                
+                    
+                <tbody>
+                    <tr>
+                        <th>商品名称</th>
+                        <th>重量(克)</th>
+                        <th>单价</th>
+                        <th>个数</th>
+                        <th>每个单价</th>
+                        <th>金额</th>
+                        <th>备注</th>
+                        <th>操作</th>
+                    </tr>
+
+                    <tr v-for="(item, index) in tempList">
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.weight }}</td>
+                        <td>{{ item.gramPerYuan }}</td>
+                        <td>{{ item.number }}</td>
+                        <td>{{ item.numberPerYuan }}</td>
+                        <td>{{ item.money }}</td>
+                        <td>{{ item.remarks }}</td>
+                        <td>
+                            <n-space>
+                                <n-button @click="updateTemp(item)">修改</n-button>
+                                <n-button @click="deleteTemp(item)">删除</n-button>
+                            </n-space>
+                        </td>
+                    </tr>
+                </tbody>
+            </n-table>
+
+
+
         </n-tab-pane>
+
+
+
+
 
         <n-tab-pane name="Count" tab="成本利润计算">
             
@@ -120,6 +161,7 @@ const adminStore = AdminStore()
 const inputList = ref([])
 const outputList = ref([])
 const salesList = ref([])
+const tempList = ref([])
 
 onMounted(() => {
   loadDatas()
@@ -143,14 +185,43 @@ const loadDatas = async () => {
         ...row, // 复制原始对象的所有属性
         displayTime: formatTime(row.time) // 添加新属性displayTime，存储格式化后的时间
     }));
+
+    let res4 = await axios.get("/sales/_token/listslip")
+    tempList.value = res4.data.rows.map(row => ({
+        ...row, // 复制原始对象的所有属性
+        money: countMoney(row.weight,row.gramPerYuan,row.number,row.numberPerYuan) 
+    }));
 }
 
-// 新增一个函数用于格式化时间
+const loadTempSlipDatas = async () => {
+    let res4 = await axios.get("/sales/_token/listslip")
+    tempList.value = res3.data.rows.map(row => ({
+        ...row, // 复制原始对象的所有属性
+        money: countMoney(row.weight,row.gramPerYuan,row.number,row.numberPerYuan) 
+    }));
+}
+
+// 格式化时间
 const formatTime = (timestamp) => {
     let date = new Date(timestamp);
     return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 }
 
+// 计算金额
+const countMoney = (weight,gramPerYuan,number,numberPerYuan) => {
+    let count=0;
+    if(weight==0||weight==null){
+
+    }else{
+        count=count+weight+gramPerYuan;
+    }
+    if(number==0||number==null){
+        
+    }else{
+        count=count+number*numberPerYuan;
+    }
+    return count;
+}
 
 //删除
 const deleteInput = async (input) => {
@@ -232,6 +303,34 @@ const deleteSales = async (sales) => {
       },
       onNegativeClick: () => { }
   })
+}
+
+const deleteTemp = async (sales) => {
+  
+    let res = await axios.delete(`/sales/_token/deletetemp`, {
+        params: {
+            id: item.id,
+            time: item.time 
+        }
+    });
+    if (res.data.code == 200) {
+        loadDatas()
+        message.info(res.data.msg)
+    } else {
+        message.error(res.data.msg)
+    }
+      
+}
+
+const addToSlip = async (sales) => {
+    let res = await axios.post("/sales/_token/addto", { name: sales.name, weight: sales.weight, gramPerYuan: sales.gramPerYuan, number: sales.number, numberPerYuan:sales.numberPerYuan, id:sales.id })//调用对应接口
+    if (res.data.code == 200) {
+        loadDatas()
+        message.info(res.data.msg)
+    } else {
+        message.error(res.data.msg)
+    }
+ 
 }
 </script>
 

@@ -96,6 +96,25 @@ router.delete("/_token/delete", async (req, res) => {//  /_token/delete
 
 })
 
+router.delete("/_token/deletetemp", async (req, res) => {//  /_token/delete
+    let id = req.query.id
+    let time = req.query.time
+    const delete_sql = "DELETE FROM `TempSlip` WHERE `id` = ? and `time`= ? "
+    let { err, rows } = await db.async.run(delete_sql, [id,time])
+
+    if (err == null) {
+        res.send({
+            code: 200,
+            msg: "删除成功"
+        })
+    } else {
+        res.send({
+            code: 500,
+            msg: "删除失败"
+        })
+    }
+
+})
 
 // 列表接口
 router.get("/_token/list", async (req, res) => {
@@ -116,6 +135,50 @@ router.get("/_token/list", async (req, res) => {
         })
     }
 
+})
+
+router.get("/_token/listslip", async (req, res) => {
+    const search_sql = "SELECT `name`,`weight`,`gramPerYuan`,`number`,`numberPerYuan`,`remarks`, `id`, `time` FROM `TempSlip` "
+
+    let { err, rows } = await db.async.all(search_sql, [])
+
+    if (err == null) {
+        res.send({
+            code: 200,
+            msg: "查询成功",
+            rows //rows:rows
+        })
+    } else {
+        res.send({
+            code: 500,
+            msg: "查询失败"
+        })
+    }
+
+})
+
+//添加至销售表接口
+router.post("/_token/addto", async (req, res) => {//  /_token/add
+
+    try{
+        let { name,weight,gramPerYuan,number,numberPerYuan,id } = req.body;
+        let time = new Date().getTime();
+        const insert_sql = "INSERT INTO `TempSlip` (`name`,`weight`,`gramPerYuan`,`number`,`numberPerYuan`,'id','time') VALUES (?,?,?,?,?,?,?)"
+        let params = [name, weight, gramPerYuan, number, numberPerYuan, id, time]
+        await db.async.run(insert_sql, params)//异步执行SQL插入操作
+
+        res.send({
+            code: 200,
+            msg: "添加成功"
+        })
+    }catch(error){
+        console.log(error)
+        res.send({
+            code: 500,
+            msg: "添加失败"
+        })
+    }
+    
 })
 
 
