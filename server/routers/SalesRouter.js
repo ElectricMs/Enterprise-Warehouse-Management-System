@@ -138,7 +138,7 @@ router.get("/_token/list", async (req, res) => {
 })
 
 router.get("/_token/listslip", async (req, res) => {
-    const search_sql = "SELECT `name`,`weight`,`gramPerYuan`,`number`,`numberPerYuan`,`remarks`, `id`, `time` FROM `TempSlip` "
+    const search_sql = "SELECT `name`,`weight`,`gramPerYuan`,`number`,`numberPerYuan`,`remarks`, `id`, `time` FROM `TempSlip` ORDER BY `time` DESC"
 
     let { err, rows } = await db.async.all(search_sql, [])
 
@@ -181,6 +181,28 @@ router.post("/_token/addto", async (req, res) => {//  /_token/add
     
 })
 
+//修改
+router.put("/_token/updatetemp", async (req, res) => {//  /_token/update
 
+    try{
+        let { id,name,weight,gramPerYuan,number,numberPerYuan,remarks } = req.body;
+        let update_time = new Date().getTime();
+        const update_sql = "UPDATE `TempSlip` SET `name` = ?,`weight` = ?,`gramPerYuan` = ?,`number` = ?,`numberPerYuan` = ?,`time`=?,`remarks`=? WHERE `id` = ?"
+        let params = [name, weight, gramPerYuan, number, numberPerYuan,update_time,remarks,id]
+        await db.async.run(update_sql, params)
+
+        res.send({
+            code: 200,
+            msg: "修改成功"
+        })
+    }catch(error){
+        console.log(error)
+        res.send({
+            code: 500,
+            msg: "修改失败"
+        })
+    }
+
+})
 
 module.exports = router

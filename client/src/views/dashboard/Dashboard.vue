@@ -10,7 +10,7 @@
         <div style="padding:20px;width:100%">
             <router-view></router-view>
         </div>
-        <div class="title" v-if="!isMobile">Dashboard</div>
+        
     </div>
 </template>
 
@@ -31,7 +31,10 @@ let menus = [
     { name: "仓库管理", href: "/dashboard/warehouse" },
     { name: "出入库", href: "/dashboard/inandout" },
     { name: "操作记录", href: "/dashboard/record" },
+    { name: "销售单", href: "/dashboard/slip" },
+    { name: "销售统计", href: "/dashboard/statistics" },
     { name: "退出", href: "logout" },
+    
 ];
 
 //路由跳转 二级路由

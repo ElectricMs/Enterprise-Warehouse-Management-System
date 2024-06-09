@@ -118,6 +118,26 @@ router.get("/_token/list", async (req, res) => {
 
 })
 
+router.get("/listcount", async (req, res) => {
+    const search_sql = "SELECT COUNT(*) AS count FROM `input` "
+
+    let { err, rows } = await db.async.all(search_sql, [])
+
+    if (err == null) {
+        res.send({
+            code: 200,
+            msg: "查询数量成功",
+            rows //rows:rows
+        })
+    } else {
+        res.send({
+            code: 500,
+            msg: "查询数量失败"
+        })
+    }
+
+})
+
 
 
 module.exports = router

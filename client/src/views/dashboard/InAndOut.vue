@@ -93,8 +93,8 @@
                     </tr>
                 </tbody>
             </n-table>
-            <n-button @click="CreateSalesSlip()"style="margin-top:10px;width: 150px;margin-left:30px ">生成出库销售单</n-button>
-            <n-button @click="ClearData()"style="margin-top:10px;width: 150px;margin-left:30px; ">清空记录</n-button>
+            
+            <p>以下为被加入销售单的内容，请在此处对商品进行必要的修改（非常不建议修改价格和数量！），然后在‘销售单’界面查看和保存销售单</p>
 
             <n-table :bordered="false" :single-line="false">
                 
@@ -129,16 +129,25 @@
                 </tbody>
             </n-table>
 
+            <div style="height: 100px;"></div>
 
-
-        </n-tab-pane>
-
-
-
-
-
-        <n-tab-pane name="Count" tab="成本利润计算">
-            
+            <!--updateTemp-->
+            <n-modal v-model:show="showUpdateModel" preset="dialog" title="Dialog">
+                <template #header>
+                    <div>修改该商品</div>
+                </template>
+                <div><n-input v-model:value="updateItem.name" type="text" placeholder="请输入名称" /></div>
+                <div><n-input-number v-model:value="updateItem.weight"  placeholder="重量 克":min="0"  /></div>
+                <div><n-input-number v-model:value="updateItem.gramPerYuan"  placeholder="价格 元/g":min="0" /></div>
+                <div><n-input-number v-model:value="updateItem.number"  placeholder="数量 个":min="0" /></div>
+                <div><n-input-number v-model:value="updateItem.numberPerYuan"  placeholder="价格 元/个":min="0" /></div>
+                <div><n-input v-model:value="updateItem.remarks" type="text" placeholder="备注"/></div>
+                <template #action>
+                    <div>
+                        <n-button @click="update">提交</n-button>
+                    </div>
+                </template>
+            </n-modal>
         </n-tab-pane>
     </n-tabs>
 </template>
@@ -162,6 +171,17 @@ const inputList = ref([])
 const outputList = ref([])
 const salesList = ref([])
 const tempList = ref([])
+const showUpdateModel = ref(false)
+const updateItem = reactive({
+    name: "",
+    weight:null,
+    gramPerYuan:null,
+    number:null,
+    numberPerYuan:null,
+    remarks:null,
+    id:null
+    //update_time:0  后端会自动更新
+})
 
 onMounted(() => {
   loadDatas()
@@ -195,7 +215,7 @@ const loadDatas = async () => {
 
 const loadTempSlipDatas = async () => {
     let res4 = await axios.get("/sales/_token/listslip")
-    tempList.value = res3.data.rows.map(row => ({
+    tempList.value = res4.data.rows.map(row => ({
         ...row, // 复制原始对象的所有属性
         money: countMoney(row.weight,row.gramPerYuan,row.number,row.numberPerYuan) 
     }));
@@ -213,7 +233,7 @@ const countMoney = (weight,gramPerYuan,number,numberPerYuan) => {
     if(weight==0||weight==null){
 
     }else{
-        count=count+weight+gramPerYuan;
+        count=count+weight*gramPerYuan;
     }
     if(number==0||number==null){
         
@@ -314,7 +334,7 @@ const deleteTemp = async (sales) => {
         }
     });
     if (res.data.code == 200) {
-        loadDatas()
+        loadTempSlipDatas()
         message.info(res.data.msg)
     } else {
         message.error(res.data.msg)
@@ -332,6 +352,33 @@ const addToSlip = async (sales) => {
     }
  
 }
+
+const updateTemp = async (item) =>{//这些数据要传给服务端
+    showUpdateModel.value = true 
+    updateItem.name = item.name
+    updateItem.weight = item.weight
+    updateItem.gramPerYuan = item.gramPerYuan
+    updateItem.number = item.number
+    updateItem.numberPerYuan = item.numberPerYuan
+    updateItem.id=item.id
+    updateItem.remarks=item.remarks
+}
+
+ //更新
+ const update = async ()=>{
+    let res = await axios.put("/sales/_token/updatetemp", { id:updateItem.id, name: updateItem.name, weight: updateItem.weight,
+        gramPerYuan: updateItem.gramPerYuan, number: updateItem.number, numberPerYuan: updateItem.numberPerYuan, remarks: updateItem.remarks
+        })//服务端的更新操作
+    
+    if (res.data.code == 200) {
+        loadTempSlipDatas()
+        message.info(res.data.msg)
+    } else {
+        message.error(res.data.msg)
+    }
+    showUpdateModel.value = false;
+  }
+
 </script>
 
 <style lang="scss" scoped>
