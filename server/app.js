@@ -71,7 +71,7 @@ app.get("/",(req,res)=>{
 
 app.listen(port,()=>{
     console.log(`启动成功：http://localhost:${port}/`);
-
+    open(`http://localhost:${port}`); // 使用open库自动打开浏览器到指定URL
 })
 
 

@@ -1,0 +1,5 @@
+@echo off
+cd path\to\your\frontend\dist
+start serve
+cd path\to\your\backend
+start node app.js
